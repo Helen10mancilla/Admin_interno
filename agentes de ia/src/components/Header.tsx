@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Info,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 import type { NotificationItem, ActiveTab } from '../types';
 
@@ -18,6 +19,8 @@ interface HeaderProps {
   notifications: NotificationItem[];
   markNotificationsAsRead: () => void;
   onOpenQuickAddModal: () => void;
+  onOpenSidebar: () => void;
+  onNavigate: (tab: ActiveTab) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,7 +29,9 @@ export const Header: React.FC<HeaderProps> = ({
   setSearchQuery,
   notifications,
   markNotificationsAsRead,
-  onOpenQuickAddModal
+  onOpenQuickAddModal,
+  onOpenSidebar,
+  onNavigate
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -41,6 +46,22 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const currentTabInfo = tabTitles[activeTab];
+  const navigationOptions: Array<{ tab: ActiveTab; label: string; keywords: string }> = [
+    { tab: 'dashboard', label: 'Dashboard General', keywords: 'inicio resumen operaciones ingresos tareas' },
+    { tab: 'financials', label: 'Ingresos & Egresos', keywords: 'finanzas financiero flujo caja facturación' },
+    { tab: 'clients', label: 'Gestión CRM de Clientes', keywords: 'clientes crm contactos cartera' },
+    { tab: 'projects', label: 'Trabajos Pendientes & Proyectos', keywords: 'trabajos proyectos entregables avance fechas' },
+    { tab: 'tasks', label: 'Tareas Corporativas Internas', keywords: 'tareas pendientes departamentos equipo' },
+    { tab: 'settings', label: 'Configuración & Respaldo', keywords: 'ajustes configuración respaldo exportar datos' }
+  ];
+  const searchResults = searchQuery.trim()
+    ? navigationOptions.filter(option => `${option.label} ${option.keywords}`.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    : [];
+
+  const navigateFromSearch = (tab: ActiveTab) => {
+    onNavigate(tab);
+    setSearchQuery('');
+  };
 
   return (
     <header style={{
@@ -56,6 +77,10 @@ export const Header: React.FC<HeaderProps> = ({
       zIndex: 40,
       gap: '1.5rem'
     }}>
+      <button className="menu-toggle btn-icon" onClick={onOpenSidebar} aria-label="Abrir menú de navegación">
+        <Menu size={20} />
+      </button>
+
       {/* Title & Subtitle */}
       <div>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
@@ -69,13 +94,18 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Header Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Global Search Bar */}
-        <div style={{ position: 'relative', width: '240px' }}>
+        <div className="global-search" style={{ position: 'relative', width: '240px' }}>
           <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Buscar proyectos, clientes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchResults[0]) {
+                navigateFromSearch(searchResults[0].tab);
+              }
+            }}
             className="form-input"
             style={{ paddingLeft: '2.4rem', height: '38px', fontSize: '0.83rem', borderRadius: '10px' }}
           />
@@ -86,6 +116,22 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setSearchQuery('')} 
               style={{ position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
             />
+          )}
+          {searchResults.length > 0 && (
+            <div className="search-results" role="listbox">
+              {searchResults.map((result) => (
+                <button
+                  key={result.tab}
+                  type="button"
+                  role="option"
+                  className="search-result"
+                  onClick={() => navigateFromSearch(result.tab)}
+                >
+                  <Search size={15} />
+                  <span>{result.label}</span>
+                </button>
+              ))}
+            </div>
           )}
         </div>
 

@@ -7,13 +7,16 @@ import {
   CheckSquare, 
   Settings, 
   Zap, 
-  TrendingUp
+  TrendingUp,
+  X
 } from 'lucide-react';
 import type { ActiveTab } from '../types';
 
 interface SidebarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+  isOpen: boolean;
+  onClose: () => void;
   activeProjectsCount: number;
   pendingTasksCount: number;
 }
@@ -21,6 +24,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
+  isOpen,
+  onClose,
   activeProjectsCount,
   pendingTasksCount
 }) => {
@@ -34,7 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside style={{
+    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`} style={{
       width: '260px',
       background: 'rgba(10, 15, 26, 0.95)',
       borderRight: '1px solid var(--border-color)',
@@ -47,6 +52,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       zIndex: 50,
       flexShrink: 0
     }}>
+      <button className="sidebar-close btn-icon" onClick={onClose} aria-label="Cerrar menú de navegación">
+        <X size={18} />
+      </button>
       {/* Brand Logo */}
       <div style={{
         display: 'flex',

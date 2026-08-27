@@ -49,6 +49,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Persistent State Loaders
   const [clients, setClients] = useState<Client[]>(() => {
@@ -238,10 +239,23 @@ export const App: React.FC = () => {
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setIsSidebarOpen(false);
+        }}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         activeProjectsCount={projects.filter(p => p.status === 'en_progreso' || p.status === 'revision').length}
         pendingTasksCount={tasks.filter(t => t.status !== 'completado').length}
       />
+
+      {isSidebarOpen && (
+        <button
+          className="sidebar-overlay"
+          aria-label="Cerrar menú de navegación"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content Workspace */}
       <div className="main-content">
@@ -253,6 +267,11 @@ export const App: React.FC = () => {
           notifications={notifications}
           markNotificationsAsRead={markNotificationsAsRead}
           onOpenQuickAddModal={() => setIsQuickAddOpen(true)}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          onNavigate={(tab) => {
+            setActiveTab(tab);
+            setIsSidebarOpen(false);
+          }}
         />
 
         {/* View Component Router */}
