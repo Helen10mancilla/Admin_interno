@@ -88,7 +88,7 @@ export const App: React.FC = () => {
     let cancelled = false;
 
     fetchAllData()
-      .then(data => {
+      .then((data: Awaited<ReturnType<typeof fetchAllData>>) => {
         if (cancelled) return;
         setClients(data.clients);
         setProjects(data.projects);
@@ -97,7 +97,7 @@ export const App: React.FC = () => {
         setNotifications(data.notifications);
         setDataLoaded(true);
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Error cargando datos de Supabase:', err);
       });
 

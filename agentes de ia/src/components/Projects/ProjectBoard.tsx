@@ -55,13 +55,13 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
 
     const client = clients.find(c => c.id === clientId);
 
-    const projectData = {
+    const projectData: Omit<Project, 'id'> = {
       title,
       clientId,
       clientName: client ? client.company : 'Cliente General',
       category,
       budget: Number(budget),
-      status: 'en_progreso',
+      status: 'en_progreso' as ProjectStatus,
       progress: 10,
       startDate: startDate || new Date().toISOString().split('T')[0],
       endDate: endDate || '2026-10-30',
