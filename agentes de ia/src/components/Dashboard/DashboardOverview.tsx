@@ -44,6 +44,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     .filter(t => t.type === 'egreso' && t.status === 'pagado')
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const payrollExpenses = transactions
+    .filter(t => t.type === 'egreso' && t.category === 'Nómina' && t.status === 'pagado')
+    .reduce((sum, t) => sum + t.amount, 0);
+
   const netBalance = totalIncome - totalExpenses;
   const marginPercentage = totalIncome > 0 ? ((netBalance / totalIncome) * 100).toFixed(1) : '0';
 
@@ -166,11 +170,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <TrendingDown size={22} />
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', flexWrap: 'wrap' }}>
             <span style={{ color: '#fb7185', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
               <ArrowDownRight size={14} /> 0%
             </span>
-            <span style={{ color: 'var(--text-dim)' }}>gastos optimizados</span>
+            <span style={{ color: 'var(--text-dim)' }}>Nómina: ${payrollExpenses.toLocaleString()} COP</span>
           </div>
         </div>
 

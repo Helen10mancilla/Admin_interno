@@ -8,6 +8,7 @@ import {
   CheckCircle2, 
   Clock
 } from 'lucide-react';
+import { NominaPanel } from './nomina';
 import type { Transaction, TransactionType, TransactionStatus } from '../../types';
 
 interface FinancialHubProps {
@@ -49,6 +50,12 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
     .filter(t => t.type === 'egreso' && t.status === 'pagado')
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const payrollPaid = transactions
+    .filter(t => t.type === 'egreso' && t.category === 'Nómina' && t.status === 'pagado')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const payrollTransactions = transactions.filter(t => t.category === 'Nómina');
+
   const netBalance = paidIncome - paidExpenses;
 
   // Filtered List
@@ -61,12 +68,19 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
     return matchesType && matchesStatus && matchesSearch;
   });
 
+  const handleTypeChange = (nextType: TransactionType) => {
+    setType(nextType);
+    if (nextType === 'egreso') {
+      setCategory('Nómina');
+    }
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !amount || !clientOrVendor) return;
 
     onAddTransaction({
-      title,
+      title: type === 'egreso' && category === 'Nómina' ? `Pago de nómina - ${title}` : title,
       type,
       amount: Number(amount),
       category,
@@ -141,7 +155,7 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
             ${paidExpenses.toLocaleString()} COP
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '0.2rem' }}>
-            Nómina, SaaS, Infraestructura
+            Pago de nómina: ${payrollPaid.toLocaleString()} COP
           </div>
         </div>
 
@@ -159,6 +173,16 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
           </div>
         </div>
       </div>
+
+      <NominaPanel
+        payrollTransactions={payrollTransactions}
+        onAddPayroll={() => {
+          setType('egreso');
+          setCategory('Nómina');
+          setStatus('pagado');
+          setShowModal(true);
+        }}
+      />
 
       {/* Filter Toolbar */}
       <div className="glass-panel" style={{ padding: '1rem 1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -278,7 +302,7 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
               <div className="grid-2">
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tipo de Movimiento</label>
-                  <select value={type} onChange={(e) => setType(e.target.value as any)} className="form-select" style={{ marginTop: '0.3rem' }}>
+                  <select value={type} onChange={(e) => handleTypeChange(e.target.value as TransactionType)} className="form-select" style={{ marginTop: '0.3rem' }}>
                     <option value="ingreso">Ingreso (+)</option>
                     <option value="egreso">Egreso (-)</option>
                   </select>
@@ -325,15 +349,16 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
                 </div>
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Categoría</label>
-                  <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="form-select" style={{ marginTop: '0.3rem' }}>
+                  <select value={category} onChange={(e) => setCategory(e.target.value as Transaction['category'])} className="form-select" style={{ marginTop: '0.3rem' }}>
                     <option value="Servicios Web">Servicios Web</option>
                     <option value="Desarrollo Software">Desarrollo Software</option>
                     <option value="Consultoría IA">Consultoría IA</option>
-                    <option value="Nómina">Nómina</option>
+                    <option value="Nómina">Pago de nómina</option>
                     <option value="Servidores & Cloud">Servidores & Cloud</option>
                     <option value="Herramientas SaaS">Herramientas SaaS</option>
                     <option value="Marketing & Ads">Marketing & Ads</option>
                     <option value="Oficina & Impuestos">Oficina & Impuestos</option>
+                    <option value="Otros">Otros Conceptos</option>
                   </select>
                 </div>
               </div>
@@ -353,6 +378,7 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
                     <option value="Stripe">Stripe</option>
                     <option value="Tarjeta">Tarjeta Corporativa</option>
                     <option value="PayPal">PayPal</option>
+                    <option value="Efectivo">Efectivo</option>
                   </select>
                 </div>
               </div>

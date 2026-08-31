@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { 
   Plus, 
   Search, 
-  Calendar
+  Calendar,
+  Pencil,
+  Trash2,
+  CheckCircle2
 } from 'lucide-react';
 import type { Project, ProjectStatus, PriorityLevel, Client } from '../../types';
 
@@ -10,6 +13,8 @@ interface ProjectBoardProps {
   projects: Project[];
   clients: Client[];
   onAddProject: (newProject: Omit<Project, 'id'>) => void;
+  onUpdateProject: (id: string, project: Omit<Project, 'id'>) => void;
+  onDeleteProject: (id: string) => void;
   onUpdateProjectProgress: (id: string, progress: number, status?: ProjectStatus) => void;
 }
 
@@ -17,11 +22,14 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
   projects,
   clients,
   onAddProject,
+  onUpdateProject,
+  onDeleteProject,
   onUpdateProjectProgress
 }) => {
   const [filterStatus, setFilterStatus] = useState<'todos' | ProjectStatus>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -47,7 +55,7 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
 
     const client = clients.find(c => c.id === clientId);
 
-    onAddProject({
+    const projectData = {
       title,
       clientId,
       clientName: client ? client.company : 'Cliente General',
@@ -60,13 +68,37 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
       priority,
       assignedTo: ['Dev Team'],
       description
-    });
+    };
 
+    if (editingProject) {
+      onUpdateProject(editingProject.id, { ...projectData, progress: editingProject.progress, status: editingProject.status });
+    } else {
+      onAddProject(projectData);
+    }
+
+    closeProjectModal();
+  };
+
+  const closeProjectModal = () => {
     setTitle('');
     setClientId('');
     setBudget('');
     setDescription('');
+    setEditingProject(null);
     setShowAddModal(false);
+  };
+
+  const openEditModal = (project: Project) => {
+    setEditingProject(project);
+    setTitle(project.title);
+    setClientId(project.clientId);
+    setCategory(project.category);
+    setBudget(project.budget);
+    setPriority(project.priority);
+    setStartDate(project.startDate);
+    setEndDate(project.endDate);
+    setDescription(project.description);
+    setShowAddModal(true);
   };
 
   const totalContractedBudget = projects.reduce((sum, p) => sum + p.budget, 0);
@@ -163,16 +195,19 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
           const isCompleted = project.status === 'completado';
 
           return (
-            <div 
+            <div
               key={project.id} 
               className="glass-panel glass-panel-hover"
-              style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.2rem' }}
+              style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.2rem', borderColor: isCompleted ? 'rgba(16, 185, 129, 0.45)' : undefined }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
                   <div>
                     <span className="badge badge-indigo" style={{ marginBottom: '0.4rem' }}>{project.category}</span>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff' }}>{project.title}</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {project.title}
+                      {isCompleted && <CheckCircle2 size={18} color="#34d399" aria-label="Trabajo completado" />}
+                    </h3>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                       Cliente: <strong style={{ color: '#ffffff' }}>{project.clientName}</strong>
                     </div>
@@ -205,13 +240,14 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
                   </div>
 
                   {/* Progress Controls */}
-                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
                     {[25, 50, 75, 100].map(pct => (
                       <button
                         key={pct}
-                        onClick={() => onUpdateProjectProgress(project.id, pct, pct === 100 ? 'completado' : undefined)}
+                        type="button"
+                        onClick={() => onUpdateProjectProgress(project.id, pct, pct === 100 ? 'completado' : 'en_progreso')}
                         style={{
-                          background: project.progress === pct ? 'var(--primary)' : 'rgba(255, 255, 255, 0.04)',
+                          background: project.progress === pct ? (pct === 100 ? '#059669' : 'var(--primary)') : 'rgba(255, 255, 255, 0.04)',
                           border: '1px solid var(--border-color)',
                           borderRadius: '6px',
                           color: '#ffffff',
@@ -220,7 +256,7 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
                           cursor: 'pointer'
                         }}
                       >
-                        {pct}%
+                        {pct === 100 ? <><CheckCircle2 size={13} /> {isCompleted ? 'Finalizado' : 'Finalizar'}</> : `${pct}%`}
                       </button>
                     ))}
                   </div>
@@ -251,6 +287,20 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
                   {project.status.replace('_', ' ')}
                 </span>
               </div>
+
+              <div className="project-actions">
+                <button className="btn-secondary project-action-button" onClick={() => openEditModal(project)}>
+                  <Pencil size={15} /> Modificar
+                </button>
+                <button
+                  className="btn-secondary project-action-button project-delete-button"
+                  onClick={() => {
+                    if (confirm(`¿Eliminar el trabajo "${project.title}"?`)) onDeleteProject(project.id);
+                  }}
+                >
+                  <Trash2 size={15} /> Eliminar
+                </button>
+              </div>
             </div>
           );
         })}
@@ -261,7 +311,7 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ padding: '1.75rem' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', marginBottom: '1.25rem' }}>
-              Crear Nuevo Trabajo / Proyecto
+              {editingProject ? 'Modificar Trabajo / Proyecto' : 'Crear Nuevo Trabajo / Proyecto'}
             </h3>
 
             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -358,8 +408,8 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Guardar Proyecto</button>
+                <button type="button" className="btn-secondary" onClick={closeProjectModal}>Cancelar</button>
+                <button type="submit" className="btn-primary">{editingProject ? 'Guardar Cambios' : 'Guardar Proyecto'}</button>
               </div>
             </form>
           </div>

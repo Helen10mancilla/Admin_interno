@@ -8,7 +8,8 @@ import {
   AlertCircle, 
   Info,
   X,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
 import type { NotificationItem, ActiveTab } from '../types';
 
@@ -20,6 +21,7 @@ interface HeaderProps {
   markNotificationsAsRead: () => void;
   onOpenQuickAddModal: () => void;
   onOpenSidebar: () => void;
+  onLogout: () => void;
   onNavigate: (tab: ActiveTab) => void;
 }
 
@@ -31,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   markNotificationsAsRead,
   onOpenQuickAddModal,
   onOpenSidebar,
+  onLogout,
   onNavigate
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -93,6 +96,11 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Header Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <button className="btn-secondary header-logout" onClick={onLogout} title="Cerrar sesión">
+          <LogOut size={16} />
+          <span>Cerrar sesión</span>
+        </button>
+
         {/* Global Search Bar */}
         <div className="global-search" style={{ position: 'relative', width: '240px' }}>
           <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)' }} />
