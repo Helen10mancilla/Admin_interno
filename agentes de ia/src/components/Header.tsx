@@ -49,6 +49,11 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const currentTabInfo = tabTitles[activeTab];
+  const currentMonthLabel = new Intl.DateTimeFormat('es-ES', {
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+  const formattedCurrentMonthLabel = currentMonthLabel.charAt(0).toUpperCase() + currentMonthLabel.slice(1);
   const navigationOptions: Array<{ tab: ActiveTab; label: string; keywords: string }> = [
     { tab: 'dashboard', label: 'Dashboard General', keywords: 'inicio resumen operaciones ingresos tareas' },
     { tab: 'financials', label: 'Ingresos & Egresos', keywords: 'finanzas financiero flujo caja facturación' },
@@ -156,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
           color: 'var(--text-muted)'
         }}>
           <Calendar size={14} color="var(--primary)" />
-          <span>Agosto 2026</span>
+          <span>{formattedCurrentMonthLabel}</span>
         </div>
 
         {/* Notifications Button & Dropdown */}

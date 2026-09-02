@@ -54,16 +54,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const activeProjects = projects.filter(p => p.status === 'en_progreso' || p.status === 'revision');
   const activeClients = clients.filter(c => c.status === 'activo' || c.status === 'vip');
   const pendingTasks = tasks.filter(t => t.status !== 'completado');
+  const today = new Date();
+  const currentYear = today.getFullYear();
 
-  const monthlyData = Array.from({ length: 8 }, (_, index) => {
-    const month = index + 1;
+  const monthlyData = Array.from({ length: 12 }, (_, index) => {
+    const monthDate = new Date(currentYear, index, 1);
     const monthTransactions = transactions.filter(t => {
       const [year, transactionMonth] = t.date.split('-');
-      return year === String(new Date().getFullYear()) && Number(transactionMonth) === month;
+      return Number(year) === currentYear && Number(transactionMonth) === monthDate.getMonth() + 1;
     });
 
     return {
-      month: new Date(new Date().getFullYear(), index).toLocaleDateString('es-ES', { month: 'short' }).replace('.', ''),
+      month: monthDate.toLocaleDateString('es-ES', { month: 'short' }).replace('.', ''),
       income: monthTransactions.filter(t => t.type === 'ingreso' && t.status === 'pagado').reduce((sum, t) => sum + t.amount, 0),
       expense: monthTransactions.filter(t => t.type === 'egreso' && t.status === 'pagado').reduce((sum, t) => sum + t.amount, 0)
     };

@@ -76,6 +76,7 @@ export interface NotificationItem {
   title: string;
   message: string;
   time: string;
+  createdAt: string;
   type: 'info' | 'success' | 'warning';
   read: boolean;
 }

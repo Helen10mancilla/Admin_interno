@@ -122,6 +122,7 @@ const toNotification = (r: any): NotificationItem => ({
   title: r.title,
   message: r.message,
   time: r.time,
+  createdAt: r.created_at ?? new Date().toISOString(),
   type: r.type,
   read: r.read,
 });
@@ -131,6 +132,7 @@ const fromNotification = (n: NotificationItem) => ({
   title: n.title,
   message: n.message,
   time: n.time,
+  created_at: n.createdAt,
   type: n.type,
   read: n.read,
 });

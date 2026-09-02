@@ -38,23 +38,31 @@ export const FinancialHub: React.FC<FinancialHubProps> = ({
   const [invoiceRef, setInvoiceRef] = useState('');
 
   // Metrics
-  const paidIncome = transactions
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const currentMonthTransactions = transactions.filter(t => {
+    const txDate = new Date(`${t.date}T00:00:00`);
+    return txDate.getFullYear() === currentYear && txDate.getMonth() === currentMonth;
+  });
+
+  const payrollTransactions = currentMonthTransactions.filter(t => t.category === 'Nómina');
+
+  const paidIncome = currentMonthTransactions
     .filter(t => t.type === 'ingreso' && t.status === 'pagado')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const pendingIncome = transactions
+  const pendingIncome = currentMonthTransactions
     .filter(t => t.type === 'ingreso' && t.status === 'pendiente')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const paidExpenses = transactions
+  const paidExpenses = currentMonthTransactions
     .filter(t => t.type === 'egreso' && t.status === 'pagado')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const payrollPaid = transactions
+  const payrollPaid = currentMonthTransactions
     .filter(t => t.type === 'egreso' && t.category === 'Nómina' && t.status === 'pagado')
     .reduce((sum, t) => sum + t.amount, 0);
-
-  const payrollTransactions = transactions.filter(t => t.category === 'Nómina');
 
   const netBalance = paidIncome - paidExpenses;
 

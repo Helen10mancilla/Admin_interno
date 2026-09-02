@@ -10,7 +10,7 @@ import { TaskManager } from './components/Tasks/TaskManager';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { QuickAddModal } from './components/QuickAddModal';
 import { supabase } from './supabaseClient';
-import { fetchAllData, dataService, toClient, toProject, toTask, toTransaction, toNotification } from './dataService';
+import { fetchAllData, dataService, toClient, toProject, toTask, toTransaction, toNotification } from './dataservice';
 
 import type {
   Client,
@@ -168,7 +168,8 @@ export const App: React.FC = () => {
       id: `notif-${Date.now()}`,
       title: 'Nuevo Cliente Registrado',
       message: `${newClient.company} (${newClient.name}) añadido a la cartera CRM.`,
-      time: 'Justo ahora',
+      time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      createdAt: new Date().toISOString(),
       type: 'info',
       read: false
     }));
@@ -310,9 +311,47 @@ export const App: React.FC = () => {
     ]);
   };
 
+  useEffect(() => {
+    if (!notifications.length) return;
+
+    const expirationMs = 5 * 60 * 1000;
+    const expiredNotifications = notifications.filter(n => {
+      if (n.read) return false;
+      const createdAt = new Date(n.createdAt || Date.now()).getTime();
+      return Date.now() - createdAt >= expirationMs;
+    });
+
+    if (expiredNotifications.length > 0) {
+      setNotifications(prev => prev.map(n =>
+        expiredNotifications.some(expired => expired.id === n.id) ? { ...n, read: true } : n
+      ));
+
+      expiredNotifications.forEach(n => {
+        dataService.updateNotification({ ...n, read: true });
+      });
+    }
+
+    const timers = notifications
+      .filter(n => !n.read)
+      .map(n => {
+        const createdAt = new Date(n.createdAt || Date.now()).getTime();
+        const remainingMs = Math.max(0, expirationMs - (Date.now() - createdAt));
+
+        return window.setTimeout(() => {
+          setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
+          dataService.updateNotification({ ...n, read: true });
+        }, remainingMs);
+      });
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [notifications]);
+
   const markNotificationsAsRead = () => {
     notifications.filter(n => !n.read).forEach(n => {
       dataService.updateNotification({ ...n, read: true });
+      setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
     });
   };
 
