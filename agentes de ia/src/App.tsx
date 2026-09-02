@@ -10,7 +10,7 @@ import { TaskManager } from './components/Tasks/TaskManager';
 import { SettingsModal } from './components/Settings/SettingsModal';
 import { QuickAddModal } from './components/QuickAddModal';
 import { supabase } from './supabaseClient';
-import { fetchAllData, dataService, toClient, toProject, toTask, toTransaction, toNotification } from './dataservice';
+import { fetchAllData, dataService, toClient, toProject, toTask, toTransaction, toNotification } from '';
 
 import type {
   Client,
